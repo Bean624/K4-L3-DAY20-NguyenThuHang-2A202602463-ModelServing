@@ -17,7 +17,10 @@ they arrived too far apart. A peak approaching `--parallel` means the scheduler 
 genuinely packing concurrent requests into shared decode steps.
 `requests_deferred` went above zero: more requests arrived than there were slots, so some waited. That wait is the queue time in your P95.
 
-## Your observation (required -- replace this line)
+## Your observation 
 
-_What was the peak batch width, and does it match the effective concurrency in
-`02-server-results.md`? If the two disagree, which do you trust and why?_
+- **Peak batch width quan sát được**: Giá trị đỉnh trung bình đạt `3.80 / 4 slots` (tương đương 95% công suất tối đa của `--parallel 4`), với `requests_processing = 4` và có thời điểm `requests_deferred` lên tới 44 requests trong hàng đợi.
+- **So sánh với Effective concurrency (41.7)**: Hai con số này đo lường hai khía cạnh khác nhau nhưng hoàn toàn tương thích và bổ trợ cho nhau:
+  - Chỉ số `3.80 / 4 slots` từ `/metrics` đo lường mức độ sử dụng phần cứng thực tế (Hardware Slot Utilisation) trong lõi llama-server tại từng bước decode, giá trị này bị chặn trên bởi cấu hình `--parallel 4`.
+  - Chỉ số `41.7` tính theo Định luật Little ($L = \lambda \times W$) đo lường tổng tải hệ thống (System Occupancy), bao gồm cả 4 request đang được xử lý trong slot và khoảng ~37-38 request đang phải xếp hàng chờ trong hàng đợi (`requests_deferred`).
+- **Độ tin cậy**: Cả hai số liệu đều đáng tin cậy ở góc độ riêng: con số `3.80` chứng minh continuous batching đã tận dụng tối đa năng lực GPU, trong khi con số `41.7` chứng minh tình trạng nghẽn hàng đợi nghiêm trọng khi tải tăng lên 50 users.
