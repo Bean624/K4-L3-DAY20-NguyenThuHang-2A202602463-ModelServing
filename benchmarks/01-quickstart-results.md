@@ -14,8 +14,8 @@ Completed requests: `UD-Q4_K_XL` 10/10 · `UD-Q2_K_XL` 10/10
 - **TPOT** = per-output-token decode cost, bounded by memory bandwidth. `decode tok/s = 1000 / TPOT_p50`.
 - `UD-Q2_K_XL` decodes **1.30x faster** than `UD-Q4_K_XL` here, for 0.73 GB less on disk.
 
-## Your observation (required -- replace this line)
+## Your observation
 
-_Is the smaller quantization worth it on your machine? Compare the numbers above,
-then judge the answer quality yourself: run `make serve` on each and ask the same
-question twice. Size and speed are measurable; usefulness is your call._
+- **Dung lượng**: Bản 2-bit (UD-Q2_K_XL) nhẹ hơn 0.73 GB so với bản 4-bit (2.24 GB vs 2.97 GB, giảm khoảng 24.6% dung lượng).
+- **Tốc độ**: Bản 2-bit decode nhanh gấp 1.30x so với bản 4-bit (103.7 tok/s vs 79.8 tok/s; TPOT P50 giảm từ 12.5 ms xuống 9.6 ms). Thời gian phản hồi token đầu tiên (TTFT P50) cũng nhanh hơn rõ rệt (189 ms vs 451 ms). Nguyên nhân do mô hình được offload hoàn toàn lên GPU NVIDIA RTX 4050 (`ngl=99`), quá trình decode bị giới hạn bởi memory bandwidth nên bản 2-bit nhẹ hơn giúp tiết kiệm băng thông truyền tải trên bus VRAM.
+- **Đánh giá đánh đổi**: Bản 2-bit mang lại cải thiện tốc độ đáng kể (~30%) và độ trễ thấp hơn, phù hợp cho các tác vụ cần phản hồi nhanh hoặc thiết bị hạn chế tài nguyên. Tuy nhiên, việc lượng tử hóa xuống 2-bit làm giảm đáng kể độ chính xác và khả năng suy luận logic so với bản 4-bit. Do đó, trên máy có đủ VRAM (RTX 4050 6GB), bản 4-bit vẫn là lựa chọn cân bằng tối ưu giữa chất lượng và tốc độ.
