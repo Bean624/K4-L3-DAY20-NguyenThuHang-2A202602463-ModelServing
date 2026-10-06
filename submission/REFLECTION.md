@@ -31,7 +31,7 @@
 - **Model đã dùng:** Gemma 4 E2B (`LAB_MODEL=gemma4-e2b`)
 - **Quantization:** gemma-4-E2B-it-UD-Q4_K_XL.gguf + gemma-4-E2B-it-UD-Q2_K_XL.gguf
 
-**Chạy ở đâu:** laptop của tôi
+**Chạy ở đâu:** Laptop cá nhân
 
 **Setup story** (≤ 80 chữ): Chạy trên laptop Windows với PowerShell 5.1, script probe ban đầu gặp lỗi charmap khi in ký tự Unicode do mã hóa mặc định. Em đã khắc phục bằng cách thiết lập PYTHONIOENCODING=utf-8 và lưu file lab.ps1 dưới dạng UTF-8 có BOM. Sau đó tiến trình cài đặt runtime CUDA và tải hai bản weights GGUF diễn ra hoàn toàn suôn sẻ.
 
@@ -99,4 +99,54 @@
 > `LAB_N_CTX`, hay `--parallel` rồi đo lại cũng được.
 
 **Change:** Chuyển đổi quantization từ UD-Q4_K_XL sang UD-Q2_K_XL
+
+```
+before: 79.8 tok/s 
+after: 103.7 tok/s 
+speedup: 1.30x
+```
+
+**Tại sao nó work** (1–2 đoạn — đây là phần grader đọc kỹ nhất):
+
+Trên GPU NVIDIA RTX 4050, giai đoạn decode của mô hình ngôn ngữ lớn bị giới hạn nghiêm trọng bởi băng thông bộ nhớ (memory bandwidth bound) chứ không phải năng lực tính toán (FLOPs). Trong mỗi bước sinh token, toàn bộ trọng số của mô hình phải được nạp lại từ VRAM vào các nhân tính toán của GPU.
+
+Bản lượng tử hóa 2-bit (UD-Q2_K_XL) có kích thước 2.24 GB, nhẹ hơn 0.73 GB (~24.6% dung lượng) so với bản 4-bit (2.97 GB). Nhờ giảm mạnh lượng dữ liệu cần luân chuyển qua bus bộ nhớ VRAM trên mỗi token, tốc độ decode đã tăng vọt từ 79.8 tok/s lên 103.7 tok/s (đạt mức speedup thực tế 1.30x).
+
+---
+
+## 6. Bonus  *(optional — tối đa 10 điểm)*
+
+_Chưa thực hiện_
+
+---
+
+## 7. Điều làm bạn ngạc nhiên nhất  *(optional)*
+
+Em ngạc nhiên nhất khi thấy Continuous Batching có thể ép xung năng lực phục vụ lên tới 3.80 / 4 slots (95% công suất) dưới tải 50 users, và nhận ra độ trễ tăng vọt khi quá tải chủ yếu đến từ thời gian xếp hàng (queue time) chứ không phải do mô hình tính toán chậm đi.
+
+---
+
+## 8. Self-check trước khi push
+
+- [x] `hardware.json` committed
+- [x] `models/active.json` committed
+- [x] `benchmarks/01-quickstart-results.md` committed (`make bench`)
+- [x] `benchmarks/01-tuning-tg128.md` committed (`make tune`)
+- [x] `benchmarks/02-server-results.md` committed (`make load-report`)
+- [x] `benchmarks/02-server-batching-u50.md` hoặc `-metrics-u50.csv` committed (`make metrics`)
+- [x] `benchmarks/locust-10_stats.csv` + `locust-50_stats.csv` committed (`make load-10` / `load-50`)
+- [x] `benchmarks/03-integration-results.md` committed (`make pipeline`)
+- [x] Mọi section **"required — replace this line"** trong các file `benchmarks/*.md` đã được thay bằng nhận xét của bạn
+- [x] 5 screenshots trong `submission/screenshots/`
+- [x] `make verify` → **exit 0**
+- [x] Repo tên đúng mẫu `K4-L3-DAY20-HoVaTen-MSSV-ModelServing` (xem `docs/SUBMISSION.md`)
+- [x] Repo GitHub ở chế độ **public**
+- [x] Đã push và paste public URL vào VinUni LMS **trước 23:59 (UTC+7) ngày làm lab**
+- [x] **Không** commit `models/*.gguf`, `runtime/` hay `.env` (đã có trong `.gitignore`)
+
+---
+
+## 9. Khai báo sử dụng AI  *(xem `docs/RULES.md` §3)*
+
+Được hỗ trợ bởi trợ lý AI Antigravity trong việc giải thích khái niệm serving, xử lý lỗi encoding PowerShell trên Windows và rà soát đối chiếu số liệu báo cáo.
 
