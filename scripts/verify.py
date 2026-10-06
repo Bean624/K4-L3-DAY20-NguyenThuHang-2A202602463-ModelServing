@@ -17,6 +17,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "lib"))
+# pyrefly: ignore [missing-import]
 import labkit  # noqa: E402
 
 MIN_SCREENSHOTS = 5
