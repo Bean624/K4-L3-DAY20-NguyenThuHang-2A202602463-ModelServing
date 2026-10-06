@@ -116,7 +116,18 @@ Bản lượng tử hóa 2-bit (UD-Q2_K_XL) có kích thước 2.24 GB, nhẹ h�
 
 ## 6. Bonus  *(optional — tối đa 10 điểm)*
 
-_Chưa thực hiện_
+**Đã làm:** B2 sweep-gpu (GPU Layer Offload Sweep) & B5/Challenge C8 (Semantic Caching Offline)
+**Numbers:**
+```
+before: 16.9 tok/s (-ngl 0, CPU-only) 
+after: 79.1 tok/s (-ngl 99, Full GPU Offload) 
+speedup: 4.67x
+```
+
+**Điều này nói lên gì mà deck chưa nói:**
+1. **Khảo sát GPU Offload (B2/B3)**: Khác với CPU scaling (nơi throughput đi ngang do nghẽn memory bandwidth), GPU offload mang lại mức tăng tốc gần như tuyến tính theo số layer được chuyển giao sang GPU (từ 16.9 tok/s ở `-ngl 0` lên 79.1 tok/s ở `-ngl 99`, đạt **4.67x speedup**). Do VRAM 6GB của RTX 4050 đủ sức chứa toàn bộ model 2.97 GB, không hề có hiện tượng tràn VRAM hay nghẽn băng thông host-device PCIe ở mức full offload.
+2. **Thử nghiệm Semantic Cache C8 (B4/B5)**: Semantic Cache nằm ở tầng cao nhất trước cả KV cache, giúp bắt các câu hỏi diễn đạt lại (paraphrase) có độ tương đồng ngữ nghĩa cao. Với tập prompt thử nghiệm, cache đạt hit rate **38% (3/8 requests)**, giúp tiết kiệm 100% tài nguyên tính toán (bỏ qua cả prefill lẫn decode) với độ trễ phục vụ = 0 ms. Tuy nhiên, trong môi trường multi-tenant, cần áp dụng cơ chế salting cache theo tenant để ngăn ngừa rò rỉ dữ liệu qua kênh timing attack (NDSS'25).
+
 
 ---
 
